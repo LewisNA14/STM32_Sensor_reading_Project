@@ -21,11 +21,18 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include "BMP280.h"
 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+typedef struct {
+	float temp;
+	float press;
+
+} SensorVals;
 
 /* USER CODE END PTD */
 
@@ -42,6 +49,8 @@
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
+TIM_HandleTypeDef htim3;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -53,12 +62,64 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
+//void bmp280_init(void);
+//void bmp280_read_float(void);
+
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/*
+ * Sensor Read Values
+ *
+ * Description:
+ * Reads the values read from the BMP280 sensor based on clock interval
+ *
+ * Param:
+ * temp, press, Sensor
+ */
+SensorVals SensorReadValue()
+{
+	SensorVals val;
+
+	if (bmp280_read_float(&val.temp, &val.press))
+	{
+		printf("Temperature: %.2f °C, Pressure: %.2f hPa\r\n", val.temp, val.press);
+	}
+	else
+	{
+		val.temp = 0;
+		val.press = 0;
+		printf("BMP280 read failed!\r\n");
+	}
+
+	return val;
+}
+
+
+/*
+ * Timer Callback Function
+ *
+ * Description:
+ * Calls specific functions every 5 seconds to reduce over-use of read.
+ *
+ * Parameters:
+ * htim, TIM3, Instance, SensorVals
+ */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if (htim->Instance == TIM3) // check it’s TIM3
+    {
+    	// Declare a static SensorVals struct to retain sensor values between calls
+    	static SensorVals sensor;
+
+    	// Read values from the BMP280 and store them in the struct
+    	sensor = SensorReadValue();
+    }
+}
 
 /* USER CODE END 0 */
 
@@ -68,10 +129,6 @@ static void MX_I2C1_Init(void);
   */
 int main(void)
 {
-
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -93,8 +150,12 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-
+  bmp280_init();
+  HAL_NVIC_SetPriority(TIM3_IRQn, 0, 0);  // Highest priority (adjust if needed)
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  HAL_TIM_Base_Start_IT(&htim3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -198,6 +259,51 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 7199;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 65535;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
 
 }
 

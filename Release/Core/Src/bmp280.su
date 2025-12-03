@@ -1,0 +1,8 @@
+../Core/Src/bmp280.c:56:19:read_data	24	static
+../Core/Src/bmp280.c:47:13:read_register16	32	static
+../Core/Src/bmp280.c:77:12:write_register8	32	static
+../Core/Src/bmp280.c:84:6:bmp280_init	16	static
+../Core/Src/bmp280.c:130:6:bmp280_force_measurement	16	static
+../Core/Src/bmp280.c:141:6:bmp280_is_measuring	16	static
+../Core/Src/bmp280.c:188:6:bmp280_read_fixed	56	static
+../Core/Src/bmp280.c:205:6:bmp280_read_float	24	static

@@ -1,0 +1,6 @@
+../Core/Src/main.c:84:12:SensorReadValue	2
+../Core/Src/main.c:111:6:HAL_TIM_PeriodElapsedCallback	4
+../Core/Src/main.c:185:6:SystemClock_Config	4
+../Core/Src/main.c:139:5:main	8
+../Core/Src/main.c:394:5:_write	1
+../Core/Src/main.c:406:6:Error_Handler	1

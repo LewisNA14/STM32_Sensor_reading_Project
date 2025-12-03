@@ -1,7 +1,10 @@
-../Core/Src/main.c:71:5:main	3
-../Core/Src/main.c:101:6:SystemClock_Config	4
-../Core/Src/main.c:147:13:MX_I2C1_Init	4
-../Core/Src/main.c:195:13:MX_USART2_UART_Init	2
-../Core/Src/main.c:230:13:MX_GPIO_Init	1
-../Core/Src/main.c:265:5:_write	1
-../Core/Src/main.c:277:6:Error_Handler	1
+../Core/Src/main.c:84:12:SensorReadValue	2
+../Core/Src/main.c:112:6:HAL_TIM_PeriodElapsedCallback	2
+../Core/Src/main.c:130:5:main	1
+../Core/Src/main.c:176:6:SystemClock_Config	4
+../Core/Src/main.c:222:13:MX_I2C1_Init	4
+../Core/Src/main.c:270:13:MX_TIM3_Init	4
+../Core/Src/main.c:315:13:MX_USART2_UART_Init	2
+../Core/Src/main.c:350:13:MX_GPIO_Init	1
+../Core/Src/main.c:385:5:_write	1
+../Core/Src/main.c:397:6:Error_Handler	1
