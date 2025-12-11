@@ -29,6 +29,7 @@ This project combines embedded programming, data parsing, and basic data visuali
 - STM32CubeIDE version 1.19
 - HAL / LL drivers
 - PuTTy
+- Visual Studio Code
 
 ## Aims
 Beyond building the BMP280 reader/visualiser, the project was designed to develop some practical engineering skills:
