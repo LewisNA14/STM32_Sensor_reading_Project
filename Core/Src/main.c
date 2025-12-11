@@ -31,9 +31,16 @@
 typedef struct {
 	float temp;
 	float press;
-
+	uint32_t time;
 } SensorVals;
 
+typedef struct {
+	uint32_t time;
+	uint8_t sec;
+	uint8_t min;
+	uint8_t hour;
+	char timestamp[9];
+} TimeStamp;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -72,22 +79,58 @@ static void MX_TIM3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+volatile uint8_t sensor_ready = 0;
+SensorVals sensor;
+TimeStamp ts;
+
+
+/*
+ * Creating the Timestamp
+ *
+ * Description:
+ * Creates the timestamp for the UART Serial Logging
+ *
+ * Parameters:
+ * time, TimeStamp
+ */
+
+
+
+TimeStamp Timestamp_Creator(void)
+{
+	TimeStamp ts;
+
+	 // Get current time in milliseconds
+	ts.time = HAL_GetTick();
+
+	// Convert milliseconds to total seconds
+	uint32_t total_seconds = ts.time / 1000;
+
+	// Extract hours, minutes, seconds
+	ts.hour = total_seconds / 3600;
+	ts.min  = (total_seconds % 3600) / 60;
+	ts.sec  = total_seconds % 60;
+
+	return ts;
+}
+
 /*
  * Sensor Read Values
  *
  * Description:
- * Reads the values read from the BMP280 sensor based on clock interval
+ * Reads & prints the values read from the BMP280 sensor based on clock interval
  *
- * Param:
+ * Parameters:
  * temp, press, Sensor
  */
-SensorVals SensorReadValue()
+SensorVals SensorReadValue(TimeStamp *ts)
 {
 	SensorVals val;
+	*ts = Timestamp_Creator(); // update timestamp
 
 	if (bmp280_read_float(&val.temp, &val.press))
 	{
-		printf("Temperature: %.2f °C, Pressure: %.2f hPa\r\n", val.temp, val.press);
+		return val;
 	}
 	else
 	{
@@ -98,7 +141,6 @@ SensorVals SensorReadValue()
 
 	return val;
 }
-
 
 /*
  * Timer Callback Function
@@ -114,10 +156,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     if (htim->Instance == TIM3) // check it’s TIM3
     {
     	// Declare a static SensorVals struct to retain sensor values between calls
-    	static SensorVals sensor;
-
-    	// Read values from the BMP280 and store them in the struct
-    	sensor = SensorReadValue();
+    	sensor = SensorReadValue(&ts);
+		sensor_ready = 1; // just flag, no UART here
     }
 }
 
@@ -151,11 +191,18 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   MX_TIM3_Init();
+
   /* USER CODE BEGIN 2 */
+  HAL_GetTick();
+
+  // Initialise Sensor Library
   bmp280_init();
+
+  // Setting Clock Interval Interrupt
   HAL_NVIC_SetPriority(TIM3_IRQn, 0, 0);  // Highest priority (adjust if needed)
   HAL_NVIC_EnableIRQ(TIM3_IRQn);
   HAL_TIM_Base_Start_IT(&htim3);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -163,7 +210,12 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	  if (sensor_ready)
+	  {
+		  sensor_ready = 0;
+		  printf("%02u:%02u:%02u,%.2f,%.2f\r\n",
+		  ts.hour, ts.min, ts.sec, sensor.temp, sensor.press);
+	  }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
