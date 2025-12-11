@@ -31,7 +31,7 @@ This project combines embedded programming, data parsing, and basic data visuali
 - PuTTy
 - Visual Studio Code
 
-## Aims
+## Skills learned
 Beyond building the BMP280 reader/visualiser, the project was designed to develop some practical engineering skills:
 1. Improving C and Python ability through embedded code + scripting.
 2. Learning to interface with an I2C sensor via external libraries
