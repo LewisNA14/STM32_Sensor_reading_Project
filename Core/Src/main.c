@@ -79,6 +79,11 @@ static void MX_TIM3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+volatile uint8_t sensor_ready = 0;
+SensorVals sensor;
+TimeStamp ts;
+
+
 /*
  * Creating the Timestamp
  *
@@ -106,8 +111,6 @@ TimeStamp Timestamp_Creator(void)
 	ts.min  = (total_seconds % 3600) / 60;
 	ts.sec  = total_seconds % 60;
 
-	snprintf(ts.timestamp, sizeof(ts.timestamp), "%02u:%02u:%02u", ts.hour, ts.min, ts.sec);
-
 	return ts;
 }
 
@@ -127,12 +130,7 @@ SensorVals SensorReadValue(TimeStamp *ts)
 
 	if (bmp280_read_float(&val.temp, &val.press))
 	{
-		// If timestamp is numeric components only
-		printf("%02u:%02u:%02u, Temperature: %.2f °C, Pressure: %.2f hPa\r\n",
-			   ts->hour, ts->min, ts->sec, val.temp, val.press);
-
-		// OR if you used string timestamp
-		// printf("%s, Temperature: %.2f °C, Pressure: %.2f hPa\r\n", ts->timestamp, val.temp, val.press);
+		return val;
 	}
 	else
 	{
@@ -158,11 +156,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     if (htim->Instance == TIM3) // check it’s TIM3
     {
     	// Declare a static SensorVals struct to retain sensor values between calls
-    	static SensorVals sensor;
-    	static TimeStamp ts;
-
-    	// Read values from the BMP280 and store them in the struct
     	sensor = SensorReadValue(&ts);
+		sensor_ready = 1; // just flag, no UART here
     }
 }
 
@@ -215,7 +210,12 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	  if (sensor_ready)
+	  {
+		  sensor_ready = 0;
+		  printf("%02u:%02u:%02u,%.2f,%.2f\r\n",
+		  ts.hour, ts.min, ts.sec, sensor.temp, sensor.press);
+	  }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
